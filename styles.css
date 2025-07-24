@@ -1,0 +1,302 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Two-column layout */
+.container-fluid {
+    height: 100vh;
+}
+
+.row {
+    height: 100%;
+}
+
+/* Left side with background image */
+.bg-image {
+    background: linear-gradient(135deg, rgba(220, 255, 220, 0.8), rgba(200, 250, 220, 0.9)), #e8f5e9;
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Add decorative elements */
+.bg-image::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(100, 200, 150, 0.2);
+    z-index: 0;
+}
+
+.bg-image::after {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: rgba(100, 200, 150, 0.15);
+    z-index: 0;
+}
+
+/* Guidelines container */
+.guidelines-container {
+    padding: 2rem;
+    color: #333;
+    max-width: 80%;
+    margin-left: 2rem;
+    position: relative;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.guidelines-container h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.guidelines-list {
+    list-style: none;
+    padding: 0;
+}
+
+.guidelines-list li {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: flex-start;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.check-icon {
+    color: #28a745;
+    margin-right: 0.5rem;
+    font-weight: bold;
+}
+
+/* Right side with form */
+.form-container {
+    background-color: #f8f9fa;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-content {
+    width: 85%;
+    max-width: 600px;
+    padding: 2rem 0;
+}
+
+.form-title {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    color: #333;
+    text-align: center;
+}
+
+/* Form elements */
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.required-asterisk {
+    color: #dc3545;
+    margin-left: 2px;
+}
+
+.form-control, .form-select {
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+}
+
+/* Submit button */
+.submit-btn {
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    background-color: #28a745;
+    border-color: #28a745;
+    transition: all 0.2s ease-in-out;
+    margin-top: 1rem;
+}
+
+.submit-btn:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    transform: translateY(-2px);
+}
+
+.submit-btn:active {
+    transform: translateY(0);
+}
+
+/* Footer logo */
+.footer-logo {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.footer-logo p {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Search container */
+.search-container {
+    position: relative;
+}
+
+.search-container .input-group {
+    margin-bottom: 0.5rem;
+}
+
+.search-container .form-control:focus {
+    z-index: 1;
+    border-right: 0;
+}
+
+#clearSsoSearch {
+    z-index: 3;
+    border-left: 0;
+    background-color: white;
+}
+
+#clearSsoSearch:hover {
+    background-color: #f8f9fa;
+}
+
+#clearSsoSearch span {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+#ssoSearchMessage {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+/* Style for no matches in dropdown */
+.no-matches {
+    border-color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+/* Style for the search input when focused */
+#ssoSearch:focus {
+    box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+    border-color: #28a745;
+}
+
+/* Alert styles */
+.alert {
+    border-radius: 0.5rem;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.alert-success {
+    background-color: #d1e7dd;
+    border-color: #badbcc;
+    color: #0f5132;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+    color: #842029;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+    color: #664d03;
+}
+
+/* Loading indicator */
+.loading {
+    position: relative;
+}
+
+.loading:after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.7);
+    background-image: url('data:image/svg+xml;charset=utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24"%3E%3Cpath fill="%2328a745" d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity="0.25"/%3E%3Cpath fill="%2328a745" d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z"%3E%3CanimateTransform attributeName="transform" dur="0.75s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/%3E%3C/path%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 50px 50px;
+    border-radius: 10px;
+    z-index: 10;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .bg-image {
+        height: 30vh;
+        min-height: 250px;
+    }
+    
+    .form-container {
+        height: auto;
+        min-height: 70vh;
+    }
+    
+    .container-fluid, .row {
+        height: auto;
+    }
+    
+    .guidelines-container {
+        margin: 0 auto;
+        text-align: center;
+    }
+    
+    .guidelines-list li {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 767px) {
+  .logo-container img {
+    height: 48px !important;
+  }
+  .logo-container {
+    margin-left: 8px !important;
+    margin-bottom: 16px !important;
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "aws-sdk": "^2.1692.0",
+    "dotenv": "^17.2.0",
+    "formidable": "^3.5.4"
+  },
+  "name": "rx-tool-form",
+  "version": "1.0.0",
+  "description": "## Overview This is a web-based form application for submitting prescription information. The form includes cascading dropdowns that filter options based on previous selections, making it easier to select the correct data combinations.",
+  "main": "google-sheets-script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
