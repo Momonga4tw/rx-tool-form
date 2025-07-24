@@ -58,81 +58,104 @@
             <h1 class="form-title">Upload Prescription</h1>
 
             <form id="rxForm">
-              <div class="mb-3">
-                <label for="asmName" class="form-label"
-                  >ASM Name <span class="required-asterisk">*</span></label
-                >
-                <select class="form-select" id="asmName" required>
-                  <option value="" selected disabled>Select ASM Name</option>
-                  <!-- Options will be populated from Excel data -->
-                </select>
+              <div id="step1">
+                <div class="mb-3">
+                  <label for="asmName" class="form-label"
+                    >ASM Name <span class="required-asterisk">*</span></label
+                  >
+                  <select class="form-select" id="asmName" required>
+                    <option value="" selected disabled>Select ASM Name</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="rsmName" class="form-label"
+                    >RSM Name <span class="required-asterisk">*</span></label
+                  >
+                  <select class="form-select" id="rsmName" required>
+                    <option value="" selected disabled>Select RSM Name</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="smName" class="form-label"
+                    >SM Name <span class="required-asterisk">*</span></label
+                  >
+                  <select class="form-select" id="smName" required>
+                    <option value="" selected disabled>Select SM Name</option>
+                  </select>
+                </div>
+                <div class="d-grid gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="nextStepBtn"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
-              <div class="mb-3">
-                <label for="rsmName" class="form-label"
-                  >RSM Name <span class="required-asterisk">*</span></label
-                >
-                <select class="form-select" id="rsmName" required>
-                  <option value="" selected disabled>Select RSM Name</option>
-                  <!-- Options will be populated based on ASM selection -->
-                </select>
-              </div>
-              <div class="mb-3">
-                <label for="smName" class="form-label"
-                  >SM Name <span class="required-asterisk">*</span></label
-                >
-                <select class="form-select" id="smName" required>
-                  <option value="" selected disabled>Select SM Name</option>
-                  <!-- Options will be populated based on RSM selection -->
-                </select>
-              </div>
-              <div class="mb-3">
-                <label for="doctorName" class="form-label"
-                  >Doctor Name <span class="required-asterisk">*</span></label
-                >
-                <select class="form-select" id="doctorName" required>
-                  <option value="" selected disabled>Select Doctor Name</option>
-                  <!-- Options will be populated based on SM selection -->
-                </select>
-              </div>
-              <div class="mb-3">
-                <label for="city" class="form-label"
-                  >City <span class="required-asterisk">*</span></label
-                >
-                <input
-                  type="text"
-                  class="form-control"
-                  id="city"
-                  readonly
-                  required
-                />
-              </div>
-
-              <div class="mb-3">
-                <label for="rxDate" class="form-label"
-                  >Date of RX Upload
-                  <span class="required-asterisk">*</span></label
-                >
-                <input type="date" class="form-control" id="rxDate" required />
-              </div>
-
-              <div class="mb-3">
-                <label for="rxFile" class="form-label"
-                  >Upload Prescription
-                  <span class="required-asterisk">*</span></label
-                >
-                <input
-                  type="file"
-                  class="form-control"
-                  id="rxFile"
-                  accept="image/*,.pdf"
-                  required
-                />
-              </div>
-
-              <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-success submit-btn">
-                  Submit
-                </button>
+              <div id="step2" style="display: none;">
+                <div class="mb-3">
+                  <label for="doctorName" class="form-label"
+                    >Doctor Name <span class="required-asterisk">*</span></label
+                  >
+                  <select class="form-select" id="doctorName" required>
+                    <option value="" selected disabled
+                      >Select Doctor Name</option
+                    >
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="city" class="form-label"
+                    >City <span class="required-asterisk">*</span></label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="city"
+                    readonly
+                    required
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="rxDate" class="form-label"
+                    >Date of RX Upload
+                    <span class="required-asterisk">*</span></label
+                  >
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="rxDate"
+                    required
+                  />
+                </div>
+                <div class="mb-3">
+                  <label for="rxFile" class="form-label"
+                    >Upload Prescription
+                    <span class="required-asterisk">*</span></label
+                  >
+                  <input
+                    type="file"
+                    class="form-control"
+                    id="rxFile"
+                    accept="image/*,.pdf"
+                    required
+                  />
+                </div>
+                <div class="multi-step-btn-row">
+                  <button
+                    type="button"
+                    class="btn btn-secondary w-100 multi-step-btn"
+                    id="backStepBtn"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="submit"
+                    class="btn btn-success submit-btn w-100 multi-step-btn"
+                  >
+                    Submit
+                  </button>
+                </div>
               </div>
             </form>
           </div>

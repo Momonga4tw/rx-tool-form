@@ -51,6 +51,44 @@ document.addEventListener("DOMContentLoaded", function () {
   // Form submission
   form.addEventListener("submit", handleSubmit);
 
+  // Multi-step form logic
+  const step1 = document.getElementById("step1");
+  const step2 = document.getElementById("step2");
+  const nextStepBtn = document.getElementById("nextStepBtn");
+  const backStepBtn = document.getElementById("backStepBtn");
+
+  if (nextStepBtn && backStepBtn) {
+    nextStepBtn.addEventListener("click", function () {
+      // Validate step 1 fields
+      let valid = true;
+      if (!asmSelect.value) {
+        showAlert("Please select an ASM Name.", "danger");
+        valid = false;
+      }
+      if (!rsmSelect.value) {
+        showAlert("Please select an RSM Name.", "danger");
+        valid = false;
+      }
+      if (!smSelect.value) {
+        showAlert("Please select an SM Name.", "danger");
+        valid = false;
+      }
+      if (!valid) return;
+      step1.style.display = "none";
+      step2.style.display = "";
+    });
+    backStepBtn.addEventListener("click", function () {
+      step2.style.display = "none";
+      step1.style.display = "";
+    });
+  }
+  // Prevent form submit on Enter in step 1
+  if (step1) {
+    step1.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") e.preventDefault();
+    });
+  }
+
   /**
    * Load and parse the Excel file
    */
