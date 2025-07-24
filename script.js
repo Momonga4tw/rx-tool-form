@@ -76,8 +76,6 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .then((data) => {
         try {
-          console.log("Excel file loaded, size:", data.byteLength, "bytes");
-
           // Read the workbook with more detailed options
           const workbook = XLSX.read(data, {
             type: "array",
@@ -85,9 +83,6 @@ document.addEventListener("DOMContentLoaded", function () {
             cellNF: false,
             cellText: false,
           });
-
-          console.log("Workbook parsed successfully");
-          console.log("Available sheets:", workbook.SheetNames);
 
           // Try to find a sheet with relevant data
           let sheetName = workbook.SheetNames[0]; // Default to first sheet
@@ -105,7 +100,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const lowerName = name.toLowerCase();
             if (relevantSheetNames.some((term) => lowerName.includes(term))) {
               sheetName = name;
-              console.log(`Found potentially relevant sheet: ${name}`);
               break;
             }
           }
@@ -114,16 +108,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
           // Log the range of the worksheet
           const range = XLSX.utils.decode_range(worksheet["!ref"] || "A1");
-          console.log("Worksheet range:", worksheet["!ref"]);
-          console.log("Number of rows:", range.e.r - range.s.r + 1);
-          console.log("Number of columns:", range.e.c - range.s.c + 1);
 
           // Sample some cells to understand the structure
           for (let col = 0; col <= Math.min(5, range.e.c); col++) {
             const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
             const cell = worksheet[cellAddress];
             if (cell) {
-              console.log(`Header cell ${cellAddress}:`, cell.v);
             }
           }
 
@@ -137,42 +127,34 @@ document.addEventListener("DOMContentLoaded", function () {
             blankrows: false,
           });
 
-          console.log("Parsed with headers, rows:", parsedData.length);
-
           // If no data or very few rows, try without headers
           if (parsedData.length < 2) {
-            console.log("Few rows detected, trying without headers");
             parsedData = XLSX.utils.sheet_to_json(worksheet, {
               defval: "",
               header: "A",
               range: 0,
               blankrows: false,
             });
-            console.log("Parsed without headers, rows:", parsedData.length);
           }
 
           // If we still have no data, try the next sheet
           if (parsedData.length < 2 && workbook.SheetNames.length > 1) {
             const nextSheetName = workbook.SheetNames[1];
-            console.log(`Trying next sheet: ${nextSheetName}`);
             const nextWorksheet = workbook.Sheets[nextSheetName];
             parsedData = XLSX.utils.sheet_to_json(nextWorksheet, {
               defval: "",
               range: 0,
               blankrows: false,
             });
-            console.log("Parsed from second sheet, rows:", parsedData.length);
           }
 
           // If we have data, process it
           if (parsedData.length > 0) {
             excelData = parsedData;
-            console.log("First row sample:", excelData[0]);
 
             // Try to identify column headers
             const firstRow = excelData[0];
             const headers = Object.keys(firstRow);
-            console.log("Detected headers:", headers);
 
             // Map headers to expected field names
             const expectedHeaders = [
@@ -207,9 +189,6 @@ document.addEventListener("DOMContentLoaded", function () {
                   // Simple exact match
                   if (lowerText === expected.toLowerCase().replace("_", " ")) {
                     headerMapping[header] = expected;
-                    console.log(
-                      `Exact match: ${header} (${text}) -> ${expected}`
-                    );
                     break;
                   }
 
@@ -224,9 +203,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         lowerText.includes("rep"))
                     ) {
                       headerMapping[header] = expected;
-                      console.log(
-                        `ASM match: ${header} (${text}) -> ${expected}`
-                      );
                       break;
                     }
 
@@ -238,9 +214,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         lowerText.includes("lead"))
                     ) {
                       headerMapping[header] = expected;
-                      console.log(
-                        `RSM match: ${header} (${text}) -> ${expected}`
-                      );
                       break;
                     }
 
@@ -253,9 +226,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         lowerText.includes("territory"))
                     ) {
                       headerMapping[header] = expected;
-                      console.log(
-                        `SM match: ${header} (${text}) -> ${expected}`
-                      );
                       break;
                     }
 
@@ -268,9 +238,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         lowerText.includes("practitioner"))
                     ) {
                       headerMapping[header] = expected;
-                      console.log(
-                        `Doctor match: ${header} (${text}) -> ${expected}`
-                      );
                       break;
                     }
 
@@ -283,9 +250,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         lowerText.includes("town"))
                     ) {
                       headerMapping[header] = expected;
-                      console.log(
-                        `City match: ${header} (${text}) -> ${expected}`
-                      );
                       break;
                     }
                   }
@@ -295,8 +259,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // If we found header mappings, reprocess the data
             if (Object.keys(headerMapping).length > 0) {
-              console.log("Header mapping found:", headerMapping);
-
               // Determine if the first row is headers or data
               const isFirstRowHeaders = headers.some((header) => {
                 const value = String(firstRow[header] || "")
@@ -335,8 +297,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 return mappedRow;
               });
-
-              console.log("Remapped data, new first row:", excelData[0]);
             } else {
               console.warn("No header mapping found, using raw data");
 
@@ -353,10 +313,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     City: headers.length > 4 ? row[headers[4]] || "" : "",
                   };
                 });
-                console.log(
-                  "Created basic structure, new first row:",
-                  excelData[0]
-                );
               }
             }
 
@@ -370,7 +326,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             // Excel data loaded successfully, but no need to show alert
-            console.log("Excel data loaded successfully!");
           } else {
             throw new Error("No data found in Excel file");
           }
@@ -401,7 +356,6 @@ document.addEventListener("DOMContentLoaded", function () {
       showAlert("No data found in the Excel file.", "danger");
       return;
     }
-    console.log("Processing Excel data, total rows:", excelData.length);
     const firstRow = excelData[0];
     const hasExpectedFields =
       firstRow &&
@@ -432,7 +386,6 @@ document.addEventListener("DOMContentLoaded", function () {
       );
       return;
     }
-    console.log(`Found ${asmNames.length} unique ASM names`);
     asmNames.sort((a, b) => String(a).localeCompare(String(b)));
     resetDropdown(asmSelect, "Select ASM Name");
     asmNames.forEach((asm) => {

@@ -31,7 +31,7 @@ const s3 = new AWS.S3({
 const S3_BUCKET = process.env.S3_BUCKET_NAME;
 
 const server = http.createServer((req, res) => {
-  console.log(`${req.method} ${req.url}`);
+  // All console.log statements removed for production
 
   // Handle favicon requests
   if (req.url === "/favicon.ico") {
@@ -68,7 +68,7 @@ const server = http.createServer((req, res) => {
       };
       s3.upload(s3Params, (err, data) => {
         if (err) {
-          console.error("S3 upload error:", err); // Log the actual S3 error
+          // console.error("S3 upload error:", err); // Log the actual S3 error
           res.writeHead(500, { "Content-Type": "application/json" });
           res.end(
             JSON.stringify({ error: "S3 upload failed", details: err.message })
@@ -104,14 +104,14 @@ const server = http.createServer((req, res) => {
     if (err) {
       if (err.code === "ENOENT") {
         // File not found
-        console.error(`File not found: ${filePath}`);
+        // console.error(`File not found: ${filePath}`);
         res.writeHead(404, { "Content-Type": "text/html" });
         res.end(
           "<h1>404 Not Found</h1><p>The requested resource was not found on this server.</p>"
         );
       } else {
         // Server error
-        console.error(`Server error: ${err.code}`);
+        // console.error(`Server error: ${err.code}`);
         res.writeHead(500, { "Content-Type": "text/html" });
         res.end(
           "<h1>500 Internal Server Error</h1><p>An error occurred while processing your request.</p>"
@@ -126,6 +126,6 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}/`);
-  console.log(`Press Ctrl+C to stop the server`);
+  // console.log(`Server running at http://localhost:${PORT}/`);
+  // console.log(`Press Ctrl+C to stop the server`);
 });
