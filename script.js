@@ -1,22 +1,15 @@
 document.addEventListener("DOMContentLoaded", function () {
   // References to form elements
   const form = document.getElementById("rxForm");
-  const asmSelect = document.getElementById("asmName");
-  const rsmSelect = document.getElementById("rsmName");
-  const smSelect = document.getElementById("smName");
-  const doctorSelect = document.getElementById("doctorName");
-  const cityInput = document.getElementById("city");
+  const wsfaSelect = document.getElementById("wsfaCode");
+  const wsfaSearch = document.getElementById("wsfaSearch");
+  const wsfaSearchMessage = document.getElementById("wsfaSearchMessage");
   const dateInput = document.getElementById("rxDate");
   const fileInput = document.getElementById("rxFile");
 
-  // Disable dependent dropdowns initially
-  rsmSelect.disabled = true;
-  smSelect.disabled = true;
-  doctorSelect.disabled = true;
-  cityInput.disabled = true;
-
   // Data structure to store Excel data
   let excelData = [];
+  let allWsfaCodes = []; // Store all WSFA codes for filtering
 
   // Set today's date as default for date input
   const today = new Date();
@@ -26,11 +19,11 @@ document.addEventListener("DOMContentLoaded", function () {
   // Load Excel file
   loadExcelFile();
 
-  // Event listeners for cascading dropdowns
-  asmSelect.addEventListener("change", handleAsmChange);
-  rsmSelect.addEventListener("change", handleRsmChange);
-  smSelect.addEventListener("change", handleSmChange);
-  doctorSelect.addEventListener("change", handleDoctorChange);
+  // Form submission
+  form.addEventListener("submit", handleSubmit);
+
+  // Search functionality
+  wsfaSearch.addEventListener("input", filterWsfaCodes);
 
   // Add keyboard shortcut (Ctrl+F or Cmd+F) to focus search
   document.addEventListener("keydown", function (e) {
@@ -39,82 +32,106 @@ document.addEventListener("DOMContentLoaded", function () {
       // Prevent the default browser search
       e.preventDefault();
       // Focus the search input
-      // ssoSearch.focus(); // This line is removed
+      wsfaSearch.focus();
     }
   });
 
   /**
-   * Filter SSO dropdown options based on search text
+   * Filter WSFA dropdown options based on search text
    */
-  // This function is removed as per the edit hint.
+  function filterWsfaCodes() {
+    const searchText = wsfaSearch.value.toLowerCase().trim();
 
-  // Form submission
-  form.addEventListener("submit", handleSubmit);
+    // Reset dropdown
+    resetDropdown(wsfaSelect, "Select WSFA Code");
 
-  // Multi-step form logic
-  const step1 = document.getElementById("step1");
-  const step2 = document.getElementById("step2");
-  const nextStepBtn = document.getElementById("nextStepBtn");
-  const backStepBtn = document.getElementById("backStepBtn");
+    if (searchText === "") {
+      // Show all codes if search is empty
+      allWsfaCodes.forEach((code) => {
+        const option = document.createElement("option");
+        option.value = String(code);
+        option.textContent = String(code);
+        wsfaSelect.appendChild(option);
+      });
+      wsfaSearchMessage.textContent = "Start typing to filter WSFA codes";
+      wsfaSearch.classList.remove("no-matches");
+      // Enable dropdown when showing all codes
+      wsfaSelect.disabled = false;
+      return;
+    }
 
-  if (nextStepBtn && backStepBtn) {
-    nextStepBtn.addEventListener("click", function () {
-      // Validate step 1 fields
-      let valid = true;
-      if (!asmSelect.value) {
-        showAlert("Please select an ASM Name.", "danger");
-        valid = false;
-      }
-      if (!rsmSelect.value) {
-        showAlert("Please select an RSM Name.", "danger");
-        valid = false;
-      }
-      if (!smSelect.value) {
-        showAlert("Please select an SM Name.", "danger");
-        valid = false;
-      }
-      if (!valid) return;
-      step1.style.display = "none";
-      step2.style.display = "";
+    // Filter codes based on search text
+    const filteredCodes = allWsfaCodes.filter((code) =>
+      String(code).toLowerCase().includes(searchText)
+    );
+
+    if (filteredCodes.length === 0) {
+      // No matches found
+      wsfaSearchMessage.textContent = `No WSFA codes found matching "${searchText}"`;
+      wsfaSearch.classList.add("no-matches");
+      // Keep dropdown disabled when no matches
+      return;
+    }
+
+    // Add filtered options to dropdown
+    filteredCodes.forEach((code) => {
+      const option = document.createElement("option");
+      option.value = String(code);
+      option.textContent = String(code);
+      wsfaSelect.appendChild(option);
     });
-    backStepBtn.addEventListener("click", function () {
-      step2.style.display = "none";
-      step1.style.display = "";
-    });
-  }
-  // Prevent form submit on Enter in step 1
-  if (step1) {
-    step1.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") e.preventDefault();
-    });
+
+    wsfaSearchMessage.textContent = `Found ${filteredCodes.length} WSFA code(s) matching "${searchText}"`;
+    wsfaSearch.classList.remove("no-matches");
+    // Enable dropdown when showing filtered codes
+    wsfaSelect.disabled = false;
   }
 
   /**
    * Load and parse the Excel file
    */
   function loadExcelFile() {
-    const excelFilePath = "RX_Combined_MR_Doctor_Template.xlsx";
     const container = document.querySelector(".form-content");
     container.classList.add("loading");
 
     // Show a message to the user while loading
-    showAlert(
-      "Loading data from Excel file. This may take a moment...",
-      "info"
-    );
+    showAlert("Loading data from server. This may take a moment...", "info");
 
-    fetch(excelFilePath)
+    // Use secure API endpoint instead of direct Excel access
+    fetch("/api/excel-data")
       .then((response) => {
         if (!response.ok) {
           throw new Error(
-            `Failed to load Excel file: ${response.status} ${response.statusText}`
+            `Failed to load data: ${response.status} ${response.statusText}`
           );
         }
-        return response.arrayBuffer();
+        return response.json();
       })
       .then((data) => {
         try {
-          // Read the workbook with more detailed options
+          // Data comes pre-processed from secure API
+          if (!data.codes || data.codes.length === 0) {
+            throw new Error("No WSFA codes found in data");
+          }
+
+          // Skip Excel processing - we have clean data from API
+          excelData = data.codes.map((code) => ({ "WSFA CODE": code }));
+          allWsfaCodes = data.codes;
+          processExcelData();
+
+          // Remove loading and clear any alerts
+          const container = document.querySelector(".form-content");
+          container.classList.remove("loading");
+
+          // Clear the loading message
+          const existingAlert = document.querySelector(".alert");
+          if (existingAlert) {
+            existingAlert.remove();
+          }
+
+          return; // Exit early since we have processed data
+
+          // Legacy Excel processing code (unused but kept for reference)
           const workbook = XLSX.read(data, {
             type: "array",
             cellDates: true,
@@ -143,17 +160,6 @@ document.addEventListener("DOMContentLoaded", function () {
           }
 
           const worksheet = workbook.Sheets[sheetName];
-
-          // Log the range of the worksheet
-          const range = XLSX.utils.decode_range(worksheet["!ref"] || "A1");
-
-          // Sample some cells to understand the structure
-          for (let col = 0; col <= Math.min(5, range.e.c); col++) {
-            const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
-            const cell = worksheet[cellAddress];
-            if (cell) {
-            }
-          }
 
           // Try different parsing approaches
           let parsedData;
@@ -194,13 +200,13 @@ document.addEventListener("DOMContentLoaded", function () {
             const firstRow = excelData[0];
             const headers = Object.keys(firstRow);
 
-            // Map headers to expected field names
+            // Map headers to expected field names for new structure
             const expectedHeaders = [
-              "ASM NAME",
-              "RSM NAME",
+              "WSFA CODE",
+              "HCP Name",
               "SM Name",
-              "Doctor_Name",
-              "City",
+              "RSM NAME",
+              "ASM NAME",
             ];
             const headerMapping = {};
 
@@ -230,62 +236,54 @@ document.addEventListener("DOMContentLoaded", function () {
                     break;
                   }
 
+                  // Direct exact match (case-insensitive)
+                  if (headerText.toLowerCase() === expected.toLowerCase()) {
+                    headerMapping[header] = expected;
+                    break;
+                  }
+
                   // Check for partial matches
                   if (expectedTerms.some((term) => lowerText.includes(term))) {
-                    // For ASM NAME, look for patterns like ASM, MR, etc.
+                    // For WSFA CODE, look for patterns like wsfa, code, etc.
                     if (
-                      expected === "ASM NAME" &&
-                      (lowerText.includes("asm") ||
-                        lowerText.includes("mr") ||
-                        lowerText.includes("medical") ||
-                        lowerText.includes("rep"))
+                      expected === "WSFA CODE" &&
+                      (lowerText.includes("wsfa") ||
+                        lowerText.includes("code") ||
+                        lowerText.includes("id"))
                     ) {
                       headerMapping[header] = expected;
                       break;
                     }
 
-                    // For RSM NAME, look for manager, supervisor, etc.
-                    if (
-                      expected === "RSM NAME" &&
-                      (lowerText.includes("manager") ||
-                        lowerText.includes("supervisor") ||
-                        lowerText.includes("lead"))
-                    ) {
+                    // For HCP Name, look for hcp specifically
+                    if (expected === "HCP Name" && lowerText.includes("hcp")) {
                       headerMapping[header] = expected;
                       break;
                     }
 
-                    // For SM Name, look for zone, area, region, etc.
+                    // For SM Name, look for sm but exclude rsm and asm
                     if (
                       expected === "SM Name" &&
-                      (lowerText.includes("zone") ||
-                        lowerText.includes("area") ||
-                        lowerText.includes("region") ||
-                        lowerText.includes("territory"))
+                      lowerText.includes("sm") &&
+                      !lowerText.includes("rsm") &&
+                      !lowerText.includes("asm") &&
+                      !lowerText.includes("hcp")
                     ) {
                       headerMapping[header] = expected;
                       break;
                     }
 
-                    // For Doctor_Name, look for doctor, dr, physician, etc.
-                    if (
-                      expected === "Doctor_Name" &&
-                      (lowerText.includes("doctor") ||
-                        lowerText.includes("dr") ||
-                        lowerText.includes("physician") ||
-                        lowerText.includes("practitioner"))
-                    ) {
+                    // For RSM NAME, look for rsm specifically
+                    if (expected === "RSM NAME" && lowerText.includes("rsm")) {
                       headerMapping[header] = expected;
                       break;
                     }
 
-                    // For City, look for city, location, place, etc.
+                    // For ASM NAME, look for asm specifically
                     if (
-                      expected === "City" &&
-                      (lowerText.includes("city") ||
-                        lowerText.includes("location") ||
-                        lowerText.includes("place") ||
-                        lowerText.includes("town"))
+                      expected === "ASM NAME" &&
+                      lowerText.includes("asm") &&
+                      !lowerText.includes("rsm") // Don't match if it also contains RSM
                     ) {
                       headerMapping[header] = expected;
                       break;
@@ -295,28 +293,139 @@ document.addEventListener("DOMContentLoaded", function () {
               }
             });
 
+            // Fallback: If no mappings found, try direct exact matching
+            if (Object.keys(headerMapping).length === 0) {
+              headers.forEach((header) => {
+                const headerText = String(header || "").trim();
+                for (const expected of expectedHeaders) {
+                  if (headerText.toLowerCase() === expected.toLowerCase()) {
+                    headerMapping[header] = expected;
+                    break;
+                  }
+                }
+              });
+            }
+
+            // Emergency fallback: If still no mapping, use direct column mapping
+            if (Object.keys(headerMapping).length === 0) {
+              // Try to find headers by looking for key terms
+              const wsfaIndex = headers.findIndex((h) =>
+                String(h).toLowerCase().includes("wsfa")
+              );
+              const hcpIndex = headers.findIndex((h) =>
+                String(h).toLowerCase().includes("hcp")
+              );
+              const smIndex = headers.findIndex((h) =>
+                String(h).toLowerCase().includes("sm")
+              );
+              const rsmIndex = headers.findIndex((h) =>
+                String(h).toLowerCase().includes("rsm")
+              );
+              const asmIndex = headers.findIndex((h) =>
+                String(h).toLowerCase().includes("asm")
+              );
+
+              if (wsfaIndex >= 0 && hcpIndex >= 0) {
+                if (wsfaIndex >= 0)
+                  headerMapping[headers[wsfaIndex]] = "WSFA CODE";
+                if (hcpIndex >= 0)
+                  headerMapping[headers[hcpIndex]] = "HCP Name";
+                if (smIndex >= 0) headerMapping[headers[smIndex]] = "SM Name";
+                if (rsmIndex >= 0)
+                  headerMapping[headers[rsmIndex]] = "RSM NAME";
+                if (asmIndex >= 0)
+                  headerMapping[headers[asmIndex]] = "ASM NAME";
+              }
+            }
+
+            // Final fallback: Direct exact header mapping for your specific case
+            if (Object.keys(headerMapping).length === 0) {
+              // Since your Excel has exact headers, map them directly
+              const directMapping = {
+                "WSFA CODE": "WSFA CODE",
+                "HCP Name": "HCP Name",
+                "SM Name": "SM Name",
+                "RSM NAME": "RSM NAME",
+                "ASM NAME": "ASM NAME",
+              };
+
+              headers.forEach((header) => {
+                const trimmedHeader = String(header || "").trim();
+                if (directMapping[trimmedHeader]) {
+                  headerMapping[header] = directMapping[trimmedHeader];
+                }
+              });
+            }
+
+            // Force correct mapping if we detect wrong mappings
+            if (headerMapping && typeof headerMapping === "object") {
+              // Check for incorrect mappings and fix them
+              const correctedMapping = {};
+              Object.entries(headerMapping).forEach(
+                ([srcHeader, targetHeader]) => {
+                  const srcLower = String(srcHeader || "")
+                    .toLowerCase()
+                    .trim();
+
+                  // Map each field based on its specific identifier
+                  if (srcLower.includes("hcp")) {
+                    correctedMapping[srcHeader] = "HCP Name";
+                  } else if (srcLower.includes("rsm")) {
+                    correctedMapping[srcHeader] = "RSM NAME";
+                  } else if (
+                    srcLower.includes("asm") &&
+                    !srcLower.includes("rsm")
+                  ) {
+                    correctedMapping[srcHeader] = "ASM NAME";
+                  } else if (
+                    srcLower.includes("sm") &&
+                    !srcLower.includes("rsm") &&
+                    !srcLower.includes("asm")
+                  ) {
+                    correctedMapping[srcHeader] = "SM Name";
+                  } else if (
+                    srcLower.includes("wsfa") ||
+                    srcLower.includes("code")
+                  ) {
+                    correctedMapping[srcHeader] = "WSFA CODE";
+                  }
+                  // Keep other mappings as they were
+                  else {
+                    correctedMapping[srcHeader] = targetHeader;
+                  }
+                }
+              );
+
+              // Clear and repopulate the headerMapping object
+              Object.keys(headerMapping).forEach(
+                (key) => delete headerMapping[key]
+              );
+              Object.assign(headerMapping, correctedMapping);
+            }
+
             // If we found header mappings, reprocess the data
             if (Object.keys(headerMapping).length > 0) {
-              // Determine if the first row is headers or data
-              const isFirstRowHeaders = headers.some((header) => {
-                const value = String(firstRow[header] || "")
+              // Check if the headers themselves are the field names we expect
+              const headersAreFieldNames = headers.some((header) => {
+                const headerText = String(header || "")
                   .trim()
                   .toLowerCase();
                 return (
-                  value.includes("asm") ||
-                  value.includes("rsm") ||
-                  value.includes("sm") ||
-                  value.includes("doctor")
+                  headerText.includes("wsfa") ||
+                  headerText.includes("hcp") ||
+                  headerText.includes("sm") ||
+                  headerText.includes("rsm") ||
+                  headerText.includes("asm")
                 );
               });
 
-              // Skip the header row if it's headers
-              const dataRows = isFirstRowHeaders
-                ? excelData.slice(1)
-                : excelData;
+              // If headers are field names, use all data; otherwise skip first row
+              const dataRows = headersAreFieldNames
+                ? excelData // Use all data - headers are already field names
+                : excelData.slice(1); // Skip first row if it contains headers
 
               // Map the data to the expected structure
-              excelData = dataRows.map((row) => {
+              excelData = dataRows.map((row, index) => {
                 const mappedRow = {};
 
                 // Initialize expected fields with empty strings
@@ -336,25 +445,24 @@ document.addEventListener("DOMContentLoaded", function () {
                 return mappedRow;
               });
             } else {
-              console.warn("No header mapping found, using raw data");
-
               // If we couldn't map headers, try to create a basic structure
               // This assumes the first few columns might be our data in some order
-              if (headers.length >= 3) {
+              if (headers.length >= 5) {
                 excelData = excelData.map((row) => {
                   return {
-                    ASM_NAME: row[headers[0]] || "",
-                    RSM_NAME: row[headers[1]] || "",
-                    SM_Name: row[headers[2]] || "",
-                    Doctor_Name:
-                      headers.length > 3 ? row[headers[3]] || "" : "",
-                    City: headers.length > 4 ? row[headers[4]] || "" : "",
+                    "WSFA CODE": row[headers[0]] || "",
+                    "HCP Name": row[headers[1]] || "",
+                    "SM Name": row[headers[2]] || "",
+                    "RSM NAME": row[headers[3]] || "",
+                    "ASM NAME": row[headers[4]] || "",
                   };
                 });
               }
             }
 
-            // Process data and populate initial dropdown
+            // Process data from secure API
+            allWsfaCodes = data.codes;
+            excelData = data.codes.map((code) => ({ "WSFA CODE": code }));
             processExcelData();
 
             // Remove the loading message
@@ -363,7 +471,7 @@ document.addEventListener("DOMContentLoaded", function () {
               existingAlert.remove();
             }
 
-            // Excel data loaded successfully, but no need to show alert
+            // Excel data loaded successfully
           } else {
             throw new Error("No data found in Excel file");
           }
@@ -387,158 +495,62 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   /**
-   * Process Excel data and populate initial SSO dropdown
+   * Process Excel data and populate WSFA Code dropdown
    */
   function processExcelData() {
     if (!excelData || excelData.length === 0) {
       showAlert("No data found in the Excel file.", "danger");
       return;
     }
+
     const firstRow = excelData[0];
     const hasExpectedFields =
       firstRow &&
-      (firstRow["ASM NAME"] !== undefined ||
-        firstRow["RSM NAME"] !== undefined ||
+      (firstRow["WSFA CODE"] !== undefined ||
+        firstRow["HCP Name"] !== undefined ||
         firstRow["SM Name"] !== undefined ||
-        firstRow["Doctor_Name"] !== undefined);
+        firstRow["RSM NAME"] !== undefined ||
+        firstRow["ASM NAME"] !== undefined);
+
     if (!hasExpectedFields) {
-      console.warn("Data does not have expected fields:", firstRow);
       showAlert(
         "The Excel data does not have the expected structure. Please check the Excel file format and try again.",
         "danger"
       );
       return;
     }
-    const asmNames = [
+
+    const wsfaCodes = [
       ...new Set(
         excelData
-          .map((row) => row["ASM NAME"])
-          .filter((name) => name && String(name).trim() !== "")
+          .map((row) => row["WSFA CODE"])
+          .filter((code) => code && String(code).trim() !== "")
       ),
     ];
-    if (asmNames.length === 0) {
-      console.warn("No ASM names found in data");
+
+    if (wsfaCodes.length === 0) {
       showAlert(
-        "No ASM names found in the Excel file. Please check the Excel file content and try again.",
+        "No WSFA codes found in the Excel file. Please check the Excel file content and try again.",
         "danger"
       );
       return;
     }
-    asmNames.sort((a, b) => String(a).localeCompare(String(b)));
-    resetDropdown(asmSelect, "Select ASM Name");
-    asmNames.forEach((asm) => {
-      const option = document.createElement("option");
-      option.value = String(asm);
-      option.textContent = String(asm);
-      asmSelect.appendChild(option);
-    });
-    asmSelect.disabled = false;
-  }
 
-  function handleAsmChange() {
-    const selectedAsm = asmSelect.value;
-    resetDropdown(rsmSelect, "Select RSM Name");
-    resetDropdown(smSelect, "Select SM Name");
-    resetDropdown(doctorSelect, "Select Doctor Name");
-    cityInput.value = "";
-    if (!selectedAsm) return;
-    const rsmNames = [
-      ...new Set(
-        excelData
-          .filter((row) => row["ASM NAME"] === selectedAsm)
-          .map((row) => row["RSM NAME"])
-          .filter((name) => name && String(name).trim() !== "")
-      ),
-    ];
-    rsmNames.forEach((rsm) => {
-      const option = document.createElement("option");
-      option.value = String(rsm);
-      option.textContent = String(rsm);
-      rsmSelect.appendChild(option);
-    });
-    rsmSelect.disabled = false;
-    smSelect.disabled = true;
-    doctorSelect.disabled = true;
-    cityInput.disabled = true;
-  }
+    // Store all WSFA codes for filtering
+    allWsfaCodes = wsfaCodes.sort((a, b) => String(a).localeCompare(String(b)));
 
-  function handleRsmChange() {
-    const selectedAsm = asmSelect.value;
-    const selectedRsm = rsmSelect.value;
-    resetDropdown(smSelect, "Select SM Name");
-    resetDropdown(doctorSelect, "Select Doctor Name");
-    cityInput.value = "";
-    if (!selectedAsm || !selectedRsm) return;
-    const smNames = [
-      ...new Set(
-        excelData
-          .filter(
-            (row) =>
-              row["ASM NAME"] === selectedAsm && row["RSM NAME"] === selectedRsm
-          )
-          .map((row) => row["SM Name"])
-          .filter((name) => name && String(name).trim() !== "")
-      ),
-    ];
-    smNames.forEach((sm) => {
+    // Populate dropdown with all codes initially
+    resetDropdown(wsfaSelect, "Select WSFA Code");
+    allWsfaCodes.forEach((code) => {
       const option = document.createElement("option");
-      option.value = String(sm);
-      option.textContent = String(sm);
-      smSelect.appendChild(option);
+      option.value = String(code);
+      option.textContent = String(code);
+      wsfaSelect.appendChild(option);
     });
-    smSelect.disabled = false;
-    doctorSelect.disabled = true;
-    cityInput.disabled = true;
-  }
+    wsfaSelect.disabled = false;
 
-  function handleSmChange() {
-    const selectedAsm = asmSelect.value;
-    const selectedRsm = rsmSelect.value;
-    const selectedSm = smSelect.value;
-    resetDropdown(doctorSelect, "Select Doctor Name");
-    cityInput.value = "";
-    if (!selectedAsm || !selectedRsm || !selectedSm) return;
-    const doctorNames = [
-      ...new Set(
-        excelData
-          .filter(
-            (row) =>
-              row["ASM NAME"] === selectedAsm &&
-              row["RSM NAME"] === selectedRsm &&
-              row["SM Name"] === selectedSm
-          )
-          .map((row) => row["Doctor_Name"])
-          .filter((name) => name && String(name).trim() !== "")
-      ),
-    ];
-    doctorNames.forEach((doctor) => {
-      const option = document.createElement("option");
-      option.value = String(doctor);
-      option.textContent = String(doctor);
-      doctorSelect.appendChild(option);
-    });
-    doctorSelect.disabled = false;
-    cityInput.disabled = true;
-  }
-
-  function handleDoctorChange() {
-    const selectedAsm = asmSelect.value;
-    const selectedRsm = rsmSelect.value;
-    const selectedSm = smSelect.value;
-    const selectedDoctor = doctorSelect.value;
-    cityInput.value = "";
-    if (!selectedAsm || !selectedRsm || !selectedSm || !selectedDoctor) return;
-    const row = excelData.find(
-      (row) =>
-        row["ASM NAME"] === selectedAsm &&
-        row["RSM NAME"] === selectedRsm &&
-        row["SM Name"] === selectedSm &&
-        row["Doctor_Name"] === selectedDoctor
-    );
-    if (row && row["City"]) {
-      cityInput.value = row["City"];
-    }
-    cityInput.disabled = false;
+    // Store the original Excel data for exact matching
+    window.originalExcelData = excelData;
   }
 
   /**
@@ -552,36 +564,52 @@ document.addEventListener("DOMContentLoaded", function () {
   /**
    * Handle form submission
    */
-  let scriptURL = "";
-  fetch("/config")
-    .then((res) => res.json())
-    .then((cfg) => {
-      scriptURL = cfg.scriptURL;
-    });
 
   async function handleSubmit(event) {
     event.preventDefault();
     if (!validateForm()) {
       return;
     }
-    // Wait for scriptURL to be loaded
-    if (!scriptURL) {
+
+    // Get the selected WSFA code and find corresponding data
+    const selectedWsfaCode = wsfaSelect.value;
+
+    // Try to find the row with flexible comparison
+    let selectedRow = excelData.find((row) => {
+      const rowCode = String(row["WSFA CODE"] || "").trim();
+      const selectedCode = String(selectedWsfaCode || "").trim();
+      return rowCode === selectedCode;
+    });
+
+    // If not found in current data, try original data
+    if (!selectedRow && window.originalExcelData) {
+      selectedRow = window.originalExcelData.find((row) => {
+        const rowCode = String(row["WSFA CODE"] || "").trim();
+        const selectedCode = String(selectedWsfaCode || "").trim();
+        return rowCode === selectedCode;
+      });
+    }
+
+    if (!selectedRow) {
       showAlert(
-        "Configuration not loaded. Please try again in a moment.",
+        `Selected WSFA code "${selectedWsfaCode}" not found in data. Please try selecting again.`,
         "danger"
       );
       return;
     }
+
     // Upload file to S3 first
     const file = fileInput.files[0];
     if (!file) {
       showAlert("Please upload a prescription file.", "danger");
       return;
     }
+
     showAlert("Uploading file...", "info");
     const formDataFile = new FormData();
     formDataFile.append("file", file);
     let s3Url = "";
+
     try {
       const uploadRes = await fetch("/upload", {
         method: "POST",
@@ -596,26 +624,66 @@ document.addEventListener("DOMContentLoaded", function () {
       showAlert("File upload failed: " + err.message, "danger");
       return;
     }
+
     // Now send form data to Google Sheets with S3 URL
     showAlert("Submitting data...", "info");
+
+    // Helper function to find HCP Name field with flexible matching
+    function findHcpName(row) {
+      const possibleNames = [
+        "HCP Name",
+        "HCP",
+        "Doctor Name",
+        "Doctor",
+        "Physician Name",
+        "Physician",
+      ];
+
+      for (const name of possibleNames) {
+        if (row[name] !== undefined && row[name] !== null) {
+          return row[name] || ""; // Return empty string if value is empty
+        }
+      }
+
+      // If no exact match, try partial matching
+      for (const fieldName of Object.keys(row)) {
+        const lowerFieldName = fieldName.toLowerCase();
+
+        if (
+          lowerFieldName.includes("hcp") ||
+          lowerFieldName.includes("doctor") ||
+          lowerFieldName.includes("physician")
+        ) {
+          if (row[fieldName] !== undefined && row[fieldName] !== null) {
+            return row[fieldName] || ""; // Return empty string if value is empty
+          }
+        }
+      }
+
+      return "";
+    }
+
+    const hcpNameResult = findHcpName(selectedRow);
+
     const formData = {
-      asmName: asmSelect.value,
-      rsmName: rsmSelect.value,
-      smName: smSelect.value,
-      doctorName: doctorSelect.value,
-      city: cityInput.value,
+      timestamp: new Date().toISOString(),
+      wsfaCode: selectedWsfaCode,
+      hcpName: hcpNameResult,
+      smName: selectedRow["SM Name"] || "",
+      rsmName: selectedRow["RSM NAME"] || "",
+      asmName: selectedRow["ASM NAME"] || "",
       rxDate: dateInput.value,
       rxFile: s3Url,
     };
+
     sendToGoogleSheets(formData)
       .then((response) => {
         showAlert("Prescription submitted successfully!", "success");
         form.reset();
-        resetDropdown(rsmSelect, "Select RSM Name");
-        resetDropdown(smSelect, "Select SM Name");
-        resetDropdown(doctorSelect, "Select Doctor Name");
-        cityInput.value = "";
         dateInput.value = formattedDate;
+        // Clear search and reset dropdown
+        wsfaSearch.value = "";
+        filterWsfaCodes();
       })
       .catch((error) => {
         showAlert("Error submitting data: " + error.message, "danger");
@@ -628,15 +696,14 @@ document.addEventListener("DOMContentLoaded", function () {
    * @returns {Promise} - A promise that resolves when the data is sent
    */
   function sendToGoogleSheets(formData) {
-    // Use the scriptURL loaded from /config
+    // Use the server proxy endpoint (hides Google Script URL)
     const data = new FormData();
     Object.keys(formData).forEach((key) => {
       data.append(key, formData[key]);
     });
-    return fetch(scriptURL, {
+    return fetch("/submit-form", {
       method: "POST",
       body: data,
-      mode: "cors",
     }).then((response) => {
       if (!response.ok) {
         throw new Error("Network response was not ok: " + response.statusText);
@@ -650,24 +717,8 @@ document.addEventListener("DOMContentLoaded", function () {
    */
   function validateForm() {
     let isValid = true;
-    if (!asmSelect.value) {
-      showAlert("Please select an ASM Name.", "danger");
-      isValid = false;
-    }
-    if (!rsmSelect.value) {
-      showAlert("Please select an RSM Name.", "danger");
-      isValid = false;
-    }
-    if (!smSelect.value) {
-      showAlert("Please select an SM Name.", "danger");
-      isValid = false;
-    }
-    if (!doctorSelect.value) {
-      showAlert("Please select a Doctor Name.", "danger");
-      isValid = false;
-    }
-    if (!cityInput.value) {
-      showAlert("City is required.", "danger");
+    if (!wsfaSelect.value) {
+      showAlert("Please select a WSFA Code.", "danger");
       isValid = false;
     }
     if (!dateInput.value) {
@@ -715,6 +766,4 @@ document.addEventListener("DOMContentLoaded", function () {
       }, 5000);
     }
   }
-
-  // Mock data function removed
 });

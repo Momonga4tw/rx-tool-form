@@ -2,17 +2,32 @@
   "dependencies": {
     "aws-sdk": "^2.1692.0",
     "dotenv": "^17.2.0",
-    "formidable": "^3.5.4"
+    "formidable": "^3.5.4",
+    "xlsx": "^0.18.5"
   },
   "name": "rx-tool-form",
   "version": "1.0.0",
   "description": "## Overview This is a web-based form application for submitting prescription information. The form includes cascading dropdowns that filter options based on previous selections, making it easier to select the correct data combinations.",
-  "main": "google-sheets-script.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "test:security": "node test-security.js",
+    "build": "webpack --mode=production",
+    "build:secure": "webpack --mode=production && echo Secure build complete",
+    "start": "node server.js",
+    "dev": "npm run build && npm start"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/plugin-transform-member-expression-literals": "^7.27.1",
+    "@babel/plugin-transform-property-literals": "^7.27.1",
+    "@babel/preset-env": "^7.28.0",
+    "babel-loader": "^10.0.0",
+    "terser-webpack-plugin": "^5.3.14",
+    "webpack": "^5.101.0",
+    "webpack-cli": "^6.0.1"
+  }
 }
